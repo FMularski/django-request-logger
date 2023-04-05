@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Django package for logging http requests"
 authors = ["Filip <filipelblag@gmail.com>"]
 readme = "README.md"
-packages = [{include = "django_request_logger"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
