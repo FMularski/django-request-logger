@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "django-request-logger"
+version = "0.1.0"
+description = "Django package for logging http requests"
+authors = ["Filip <filipelblag@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2"
+django-environ = "^0.10.0"
+gunicorn = "^20.1.0"
+psycopg2 = "^2.9.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

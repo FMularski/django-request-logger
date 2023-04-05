@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    env_file:
+      - ./proj/.env
+  web:
+    build:
+      context: .
+    command: gunicorn proj.wsgi:application --bind 0.0.0.0:8000 --reload
+    expose:
+      - 8000
+    volumes:
+      - .:/code
+      - static:/code/static
+    depends_on:
+      db:
+        condition: service_started
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - static:/home/app/static
+
+volumes:
+  static:
