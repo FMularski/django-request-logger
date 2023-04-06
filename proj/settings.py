@@ -136,3 +136,9 @@ STATIC_ROOT = BASE_DIR / 'static'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'core.User'
+
+
+# request logger settings
+REQUEST_LOGGER_METHODS = ['GET']
+REQUEST_LOGGER_STATUS = [200]
+REQUEST_LOGGER_EXCLUDE_URL = ['admin']
