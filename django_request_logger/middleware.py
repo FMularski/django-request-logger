@@ -40,7 +40,7 @@ class RequestLoggerMiddleware:
         time_start = time.time()
 
         request_log = RequestLog(
-            authenticated_by=request.user if type(request.user) == User else None,
+            authenticated_by=request.user if request.user.is_authenticated else None,
             url=request.path,  
             method=request.method,
             body=request.body.decode() # or request.data
