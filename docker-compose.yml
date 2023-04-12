@@ -25,6 +25,9 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - static:/home/app/static
+    depends_on:
+      web:
+        condition: service_started
 
 volumes:
   static:
