@@ -9,18 +9,9 @@ class RequestLogAdmin(ModelAdmin):
     list_filter = 'method', 'status'
     search_fields = 'url',
 
-    def get_fields(self, request, obj):
-        fields = super().get_fields(request, obj)
-        fields.remove('response')
-        return fields
-
     def get_readonly_fields(self, request, obj):
         fields = [field.name for field in self.model._meta.fields]
-        fields.remove('response')
-        return fields + ['formatted_response']
-    
-    def formatted_response(self, obj):
-        return mark_safe(obj.response)
+        return fields
 
 
 admin.site.register(RequestLog, RequestLogAdmin)

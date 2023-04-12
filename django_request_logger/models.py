@@ -25,6 +25,7 @@ class RequestLog(models.Model):
     status = models.PositiveSmallIntegerField()
     body = models.JSONField(null=True, blank=True)
     response = models.JSONField(null=True, blank=True)
+    response_content_type = models.CharField(max_length=200)
     execution_time = models.FloatField()
 
     def __str__(self):

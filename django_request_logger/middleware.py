@@ -15,7 +15,7 @@ class RequestLoggerMiddleware:
         self._set_attr_from_settings('REQUEST_LOGGER_METHODS', ['*'])
         self._set_attr_from_settings('REQUEST_LOGGER_STATUS', ['*'])
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_URL', ['admin'])
-        # self._set_attr_from_settings('REQUEST_LOGGER_SKIP_APP', ['admin'])
+        self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
 
     def _set_attr_from_settings(self, attr, value):
         setattr(self, attr, value)
@@ -29,9 +29,9 @@ class RequestLoggerMiddleware:
             return True
         if any(segment in request_log.url for segment in self.REQUEST_LOGGER_EXCLUDE_URL):
             return True
+        if any(type_ in request_log.response_content_type for type_ in self.REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE):
+            return True
         return False
-
-
 
     def __call__(self, request):
         # Code to be executed for each request before
@@ -56,16 +56,8 @@ class RequestLoggerMiddleware:
         request_log.execution_time = time_stop - time_start
         request_log.status = response.status_code
 
-        content_type = response.headers['Content-Type']
-        
-        if 'text/html' in content_type:
-            request_log.response = response._container[0].decode()
-        elif 'application/json' in content_type:
-            request_log.response = 'json'
-        else:
-            request_log.response = content_type
-
-
+        request_log.response_content_type = response.headers['Content-Type']
+        request_log.response = response._container[0].decode()
         
         if not self._skip_save(request_log):
             request_log.save()
