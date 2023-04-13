@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from .models import RequestLog
 import time
+import json
 
 
 User = get_user_model()
@@ -58,6 +59,9 @@ class RequestLoggerMiddleware:
 
         request_log.response_content_type = response.headers['Content-Type']
         request_log.response = response._container[0].decode()
+
+        if 'application/json' in request_log.response_content_type:
+            request_log.response = json.loads(request_log.response)
         
         if not self._skip_save(request_log):
             request_log.save()
