@@ -3,6 +3,7 @@ from django.conf import settings
 from .models import RequestLog
 import time
 import json
+import re
 
 
 User = get_user_model()
@@ -18,6 +19,7 @@ class RequestLoggerMiddleware:
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_URL', ['admin'])
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
         self._set_attr_from_settings('REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
+        self._set_attr_from_settings('REQUEST_LOGGER_HIDE_SECRETS', ['password', 'token', 'access', 'refresh'])
 
     def _set_attr_from_settings(self, attr, value):
         setattr(self, attr, value)
@@ -34,6 +36,37 @@ class RequestLoggerMiddleware:
         if any(type_ in request_log.response_content_type for type_ in self.REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE):
             return True
         return False
+    
+    def _apply_new_lines(self, s):
+        return s \
+            .replace('{', '{\n') \
+            .replace('}', '\n}') \
+            .replace('[', '[\n') \
+            .replace(']', '\n]') \
+            .replace(", '", ",\n'") \
+            .replace("'", '"')
+    
+    def _hide_secrets(self, request_log):
+        body_content_type = request_log.body_content_type
+
+        body = request_log.body
+        for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
+            if body_content_type == 'application/json':
+                body = re.sub(f'"{secret}": ".*?"', f'"{secret}": "*** hidden ***"', body)
+            elif body_content_type == 'application/xml':
+                body = re.sub(f'<{secret}>.*?</{secret}>', f'<{secret}> *** hidden *** </{secret}>', body)
+            elif body_content_type == 'application/x-www-form-urlencoded':
+                body = re.sub(f'{secret}=.*?&', f'{secret}= *** hidden *** &', body)
+            
+        request_log.body = body
+
+        response = request_log.response if type(request_log.response) == str else str(request_log.response)
+        if request_log.response_content_type == 'application/json':
+            for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
+                response = re.sub(f"'{secret}': '.*?'", f"'{secret}': '*** hidden ***'", response)
+            response = self._apply_new_lines(response)
+        request_log.response = response
+
 
     def __call__(self, request):
         # Code to be executed for each request before
@@ -46,7 +79,8 @@ class RequestLoggerMiddleware:
             url=request.path,  
             method=request.method,
             body=request.body.decode(),
-            headers=str(request.headers).replace("', ", "',\n").replace("{'", "{\n'").replace("'}", "'\n}"),
+            body_content_type=request.headers.get('Content-Type'),
+            headers=self._apply_new_lines(str(request.headers)),
             client_ip=request.META['REMOTE_ADDR']
         )
 
@@ -68,6 +102,8 @@ class RequestLoggerMiddleware:
         if 'application/json' in request_log.response_content_type:
             request_log.response = json.loads(request_log.response)
         
+        self._hide_secrets(request_log)
+
         if not self._skip_save(request_log):
             request_log.save()
 

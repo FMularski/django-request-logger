@@ -16,8 +16,6 @@ class RequestLogAdmin(ModelAdmin):
         return obj.body
 
     def response_content(self, obj):
-        if 'application/json' in obj.response_content_type:
-            return json.dumps(obj.response, indent=4)
         return obj.response
     
     def get_fields(self, request, obj):

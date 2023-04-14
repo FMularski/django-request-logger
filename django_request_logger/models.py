@@ -26,8 +26,9 @@ class RequestLog(models.Model):
     headers = models.JSONField()
     status = models.PositiveSmallIntegerField()
     body = models.JSONField(null=True, blank=True)
+    body_content_type = models.CharField(max_length=200, null=True, blank=True)
     response = models.JSONField(null=True, blank=True)
-    response_content_type = models.CharField(max_length=200)
+    response_content_type = models.CharField(max_length=200, null=True, blank=True)
     execution_time = models.FloatField()
     is_slow = models.BooleanField(default=False)
 
