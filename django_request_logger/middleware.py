@@ -48,15 +48,18 @@ class RequestLoggerMiddleware:
     
     def _hide_secrets(self, request_log):
         body_content_type = request_log.body_content_type
-
         body = request_log.body
-        for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
-            if body_content_type == 'application/json':
+
+        if body_content_type == 'application/json':
+            for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
                 body = re.sub(f'"{secret}": ".*?"', f'"{secret}": "*** hidden ***"', body)
-            elif body_content_type == 'application/xml':
-                body = re.sub(f'<{secret}>.*?</{secret}>', f'<{secret}> *** hidden *** </{secret}>', body)
-            elif body_content_type == 'application/x-www-form-urlencoded':
-                body = re.sub(f'{secret}=.*?&', f'{secret}= *** hidden *** &', body)
+        elif body_content_type == 'application/xml':
+            for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
+                body = re.sub(f'<{secret}>.*?</{secret}>', f'<{secret}>*** hidden ***</{secret}>', body)
+        elif body_content_type == 'application/x-www-form-urlencoded':
+            body += '&'
+            for secret in self.REQUEST_LOGGER_HIDE_SECRETS:
+                body = re.sub(f'{secret}=.*?&', f'{secret}=*** hidden ***&', body)
             
         request_log.body = body
 
