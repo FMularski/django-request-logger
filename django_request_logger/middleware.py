@@ -44,7 +44,9 @@ class RequestLoggerMiddleware:
             authenticated_by=request.user if request.user.is_authenticated else None,
             url=request.path,  
             method=request.method,
-            body=request.body.decode() # or request.data
+            body=request.body.decode(),
+            headers=str(request.headers).replace("', ", "',\n").replace("{'", "{\n'").replace("'}", "'\n}"),
+            client_ip=request.META['REMOTE_ADDR']
         )
 
         response = self.get_response(request)

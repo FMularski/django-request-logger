@@ -22,6 +22,8 @@ class RequestLog(models.Model):
     authenticated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     url = models.CharField(max_length=200)
     method = models.CharField(max_length=7, choices=HttpMethodChoices.choices)
+    client_ip = models.CharField(max_length=200)
+    headers = models.JSONField()
     status = models.PositiveSmallIntegerField()
     body = models.JSONField(null=True, blank=True)
     response = models.JSONField(null=True, blank=True)
