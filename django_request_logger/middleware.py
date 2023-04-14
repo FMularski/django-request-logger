@@ -17,6 +17,7 @@ class RequestLoggerMiddleware:
         self._set_attr_from_settings('REQUEST_LOGGER_STATUS', ['*'])
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_URL', ['admin'])
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
+        self._set_attr_from_settings('REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
 
     def _set_attr_from_settings(self, attr, value):
         setattr(self, attr, value)
@@ -57,6 +58,8 @@ class RequestLoggerMiddleware:
         time_stop = time.time()
 
         request_log.execution_time = time_stop - time_start
+        request_log.is_slow = request_log.execution_time * 1000 > self.REQUEST_LOGGER_SLOW_EXEC_TIME
+
         request_log.status = response.status_code
 
         request_log.response_content_type = response.headers['Content-Type']

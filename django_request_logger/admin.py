@@ -6,7 +6,7 @@ import json
 
 class RequestLogAdmin(ModelAdmin):
     list_display = 'created_at', 'authenticated_by', 'method', 'url', 'status', 'response_content_type'
-    list_filter = 'method', 'status', 'response_content_type'
+    list_filter = 'method', 'status', 'response_content_type', 'is_slow'
     search_fields = 'url',
 
     def headers_content(self, obj):
