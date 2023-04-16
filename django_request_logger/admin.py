@@ -1,15 +1,16 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import ModelAdmin
 from .models import RequestLog
 from datetime import datetime
 
 
 class RequestLogAdmin(ModelAdmin):
-    list_display = 'created_at', 'authenticated_by', 'method', 'url', 'status', 'response_content_type'
+    list_display = 'created_at', 'authenticated_by', 'method', 'url', 'status', 'is_pinned'
     list_filter = 'method', 'status', 'created_at', 'response_content_type', 'is_slow'
     search_fields = 'url', 'client_ip'
     list_per_page = 20
-    ordering = '-created_at',
+    ordering = '-is_pinned', '-created_at',
+    actions = 'pin',
 
     change_list_template = 'admin/django_request_logger/requestlog/change_list.html'
 
@@ -53,10 +54,22 @@ class RequestLogAdmin(ModelAdmin):
         return fields
 
     def get_readonly_fields(self, request, obj):
-        return self.get_fields(request, obj)
+        readonly_fields = self.get_fields(request, obj)
+        readonly_fields.remove('is_pinned')
+        return readonly_fields
 
     def has_add_permission(self, request, obj=None):
         return False
+    
+    def delete_queryset(self, request, queryset):
+        return super().delete_queryset(request, queryset.filter(is_pinned=False))
 
+    @admin.action(description='Pin/Unpin selected request logs')
+    def pin(self, request, queryset):
+        for log in queryset.all():
+            log.is_pinned = not log.is_pinned
+            log.save()
+        
+        self.message_user(request, f'Altered {queryset.count()} log(s).', messages.SUCCESS)
 
 admin.site.register(RequestLog, RequestLogAdmin)
