@@ -1,13 +1,40 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from .models import RequestLog
-import json
+from datetime import datetime
 
 
 class RequestLogAdmin(ModelAdmin):
     list_display = 'created_at', 'authenticated_by', 'method', 'url', 'status', 'response_content_type'
-    list_filter = 'method', 'status', 'response_content_type', 'is_slow'
-    search_fields = 'url',
+    list_filter = 'method', 'status', 'created_at', 'response_content_type', 'is_slow'
+    search_fields = 'url', 'client_ip'
+    list_per_page = 20
+    ordering = '-created_at',
+
+    change_list_template = 'admin/django_request_logger/requestlog/change_list.html'
+
+    def changelist_view(self, request, extra_context = {}):
+        requests_500 = RequestLog.objects.filter(status__gte=500).order_by('-pk')[:5]
+        extra_context['requests_500'] = requests_500
+
+        requests_slow = RequestLog.objects.filter(is_slow=True).order_by('-pk')[:5]
+        extra_context['requests_slow'] = requests_slow
+
+        statuses = RequestLog.objects.values_list('status', flat=True).distinct()
+        status_summaries = []
+        
+        for status in statuses:
+           status_requests = RequestLog.objects.filter(status=status)
+           total_count = status_requests.count()
+           today_count = status_requests.filter(created_at__date=datetime.now().date()).count()
+           status_summaries += [{'status': status, 'total_count': total_count, 'today_count': today_count}]
+        
+        extra_context['status_summaries'] = status_summaries
+
+        clients = RequestLog.objects.values_list('client_ip', flat=True).distinct()
+        extra_context['clients'] = clients.count()
+
+        return super().changelist_view(request, extra_context)
 
     def headers_content(self, obj):
         return obj.headers
@@ -27,6 +54,9 @@ class RequestLogAdmin(ModelAdmin):
 
     def get_readonly_fields(self, request, obj):
         return self.get_fields(request, obj)
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 admin.site.register(RequestLog, RequestLogAdmin)

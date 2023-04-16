@@ -33,5 +33,5 @@ class RequestLog(models.Model):
     is_slow = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'[{self.created_at.strftime("%m/%d/%Y, %H:%M:%S")}] {self.method} {self.url}'
+        return f'[{self.created_at.strftime("%m/%d/%Y, %H:%M:%S")}] {self.method} {self.url} [{self.status}]'
 
