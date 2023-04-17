@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from datetime import datetime, timedelta
 from .models import RequestLog
 import time
 import json
@@ -20,6 +21,7 @@ class RequestLoggerMiddleware:
         self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
         self._set_attr_from_settings('REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
         self._set_attr_from_settings('REQUEST_LOGGER_HIDE_SECRETS', ['password', 'token', 'access', 'refresh'])
+        self._set_attr_from_settings('REQUEST_LOGGER_CLEAR_LOGS_TIME', None)
 
     def _set_attr_from_settings(self, attr, value):
         setattr(self, attr, value)
@@ -70,11 +72,13 @@ class RequestLoggerMiddleware:
             response = self._apply_new_lines(response)
         request_log.response = response
 
+    def _clear_old_logs(self):
+        RequestLog.objects.filter(
+            created_at__lte=datetime.now() - timedelta(minutes=self.REQUEST_LOGGER_CLEAR_LOGS_TIME), 
+            is_pinned=False
+        ).delete()
 
     def __call__(self, request):
-        # Code to be executed for each request before
-        # the view (and later middleware) are called.
-
         time_start = time.time()
 
         request_log = RequestLog(
@@ -88,9 +92,6 @@ class RequestLoggerMiddleware:
         )
 
         response = self.get_response(request)
-
-        # Code to be executed for each request/response after
-        # the view is called.
 
         time_stop = time.time()
 
@@ -109,5 +110,8 @@ class RequestLoggerMiddleware:
 
         if not self._skip_save(request_log):
             request_log.save()
+
+        if self.REQUEST_LOGGER_CLEAR_LOGS_TIME:
+            self._clear_old_logs()
 
         return response
