@@ -5,6 +5,7 @@ from .models import RequestLog
 import time
 import json
 import re
+import os
 
 
 User = get_user_model()
@@ -13,7 +14,6 @@ User = get_user_model()
 class RequestLoggerMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        # One-time configuration and initialization.
 
         self._set_attr_from_settings('REQUEST_LOGGER_METHODS', ['*'])
         self._set_attr_from_settings('REQUEST_LOGGER_STATUS', ['*'])
@@ -22,6 +22,8 @@ class RequestLoggerMiddleware:
         self._set_attr_from_settings('REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
         self._set_attr_from_settings('REQUEST_LOGGER_HIDE_SECRETS', ['password', 'token', 'access', 'refresh'])
         self._set_attr_from_settings('REQUEST_LOGGER_CLEAR_LOGS_TIME', None)
+        self._set_attr_from_settings('REQUEST_LOGGER_LOG_FILES_PATH', None)
+        self._set_attr_from_settings('REQUEST_LOGGER_LOG_FILES_FIELDS', ['created_at', 'client_ip', 'method', 'url', 'status'])
 
     def _set_attr_from_settings(self, attr, value):
         setattr(self, attr, value)
@@ -78,6 +80,16 @@ class RequestLoggerMiddleware:
             is_pinned=False
         ).delete()
 
+    def _dump_to_file(self, request_log):
+        path = self.REQUEST_LOGGER_LOG_FILES_PATH
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        with open(f'{path}/{datetime.now().date()}.log', 'a') as log_file:
+            fields = self.REQUEST_LOGGER_LOG_FILES_FIELDS
+            log_line = ' '.join([str(getattr(request_log, field)).replace('\n', '') for field in fields]) + '\n'           
+            log_file.write(log_line)
+
     def __call__(self, request):
         time_start = time.time()
 
@@ -110,6 +122,9 @@ class RequestLoggerMiddleware:
 
         if not self._skip_save(request_log):
             request_log.save()
+
+            if self.REQUEST_LOGGER_LOG_FILES_PATH:
+                self._dump_to_file(request_log)
 
         if self.REQUEST_LOGGER_CLEAR_LOGS_TIME:
             self._clear_old_logs()

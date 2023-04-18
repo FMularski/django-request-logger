@@ -147,3 +147,13 @@ REQUEST_LOGGER_SLOW_EXEC_TIME = 500
 REQUEST_LOGGER_CLEAR_LOGS_TIME = 1
 # REQUEST_LOGGER_HIDE_SECRETS = ['password']
 REQUEST_LOGGER_CLEAR_LOGS_TIME = 1
+REQUEST_LOGGER_LOG_FILES_PATH = BASE_DIR / 'logi-zadania'
+REQUEST_LOGGER_LOG_FILES_FIELDS = [
+    'created_at', 'authenticated_by', 'url', 
+    'method', 'client_ip', 'headers',
+    'status', 'body', 'body_content_type',
+    'response', 'response_content_type',
+    'execution_time', 'is_slow',
+]
+
+REQUEST_LOGGER_LOG_FILES_FIELDS = ['method', 'url', 'status']
