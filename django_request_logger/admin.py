@@ -3,6 +3,7 @@ from django.contrib.admin import ModelAdmin
 from django.contrib.admin.actions import delete_selected as default_delete_selected
 from .models import RequestLog
 from datetime import datetime
+from django.conf import settings
 
 
 def delete_selected(modeladmin, request, queryset):
@@ -44,6 +45,8 @@ class RequestLogAdmin(ModelAdmin):
 
         clients = RequestLog.objects.values_list('client_ip', flat=True).distinct()
         extra_context['clients'] = clients.count()
+
+        extra_context['files_path'] = getattr(settings, 'REQUEST_LOGGER_LOG_FILES_PATH', None)
 
         return super().changelist_view(request, extra_context)
 

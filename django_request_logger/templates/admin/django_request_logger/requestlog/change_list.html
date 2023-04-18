@@ -3,7 +3,7 @@
 
 {% block content %}
   <div id="content-main">
-    <h1><b>{% trans "Summary" %}</b></h1>
+    <h1>{% trans "Summary" %}</h1>
     
     <div style="display: flex; flex-wrap:wrap; margin-bottom: 2rem;">
         <div style="display: flex; flex-wrap: wrap; width: 50%;">
@@ -47,6 +47,17 @@
                 <center>
                     <b style="font-size: 2rem;">{{clients}}</b>
                     <p>{% trans "different clients registered" %}</p>
+                </center>
+            </div>
+        </div>
+        <div>
+            <h1>{% trans "Logging to files" %}</h1>
+            <div style="padding: 1rem 2rem;">
+                <center>
+                    <b style="font-size: 2rem;">{% if files_path %} {% trans "Enabled" %} {% else %} {% trans "Disabled" %} {% endif %}</b>
+                    {% if files_path %}
+                      <p>{{files_path}}</p>
+                    {% endif %}
                 </center>
             </div>
         </div>
