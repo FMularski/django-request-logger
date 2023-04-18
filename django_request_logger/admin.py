@@ -26,10 +26,12 @@ class RequestLogAdmin(ModelAdmin):
     change_list_template = 'admin/django_request_logger/requestlog/change_list.html'
 
     def changelist_view(self, request, extra_context = {}):
-        requests_500 = RequestLog.objects.filter(status__gte=500).order_by('-pk')[:5]
+        error_limit = getattr(settings, 'REQUEST_LOGGER_ERROR_LIST_LIMIT', 5)
+        requests_500 = RequestLog.objects.filter(status__gte=500).order_by('-pk')[:error_limit]
         extra_context['requests_500'] = requests_500
 
-        requests_slow = RequestLog.objects.filter(is_slow=True).order_by('-pk')[:5]
+        slow_limit = getattr(settings, 'REQUEST_LOGGER_SLOW_LIST_LIMIT', 5)
+        requests_slow = RequestLog.objects.filter(is_slow=True).order_by('-pk')[:slow_limit]
         extra_context['requests_slow'] = requests_slow
 
         statuses = RequestLog.objects.values_list('status', flat=True).distinct()
@@ -89,7 +91,7 @@ class RequestLogAdmin(ModelAdmin):
 
         return super().delete_queryset(request, logs_to_delete)
     
-    def delete_model(self, request, obj) -> None:
+    def delete_model(self, request, obj):
         if obj.is_pinned:
             self.message_user(request, 'You cannot delete a pinned request log.', level=messages.WARNING)
             return None

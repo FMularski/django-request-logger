@@ -15,20 +15,15 @@ class RequestLoggerMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-        self._set_attr_from_settings('REQUEST_LOGGER_METHODS', ['*'])
-        self._set_attr_from_settings('REQUEST_LOGGER_STATUS', ['*'])
-        self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_URL', ['admin'])
-        self._set_attr_from_settings('REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
-        self._set_attr_from_settings('REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
-        self._set_attr_from_settings('REQUEST_LOGGER_HIDE_SECRETS', ['password', 'token', 'access', 'refresh'])
-        self._set_attr_from_settings('REQUEST_LOGGER_CLEAR_LOGS_TIME', None)
-        self._set_attr_from_settings('REQUEST_LOGGER_LOG_FILES_PATH', None)
-        self._set_attr_from_settings('REQUEST_LOGGER_LOG_FILES_FIELDS', ['created_at', 'client_ip', 'method', 'url', 'status'])
-
-    def _set_attr_from_settings(self, attr, value):
-        setattr(self, attr, value)
-        if hasattr(settings, attr):
-            setattr(self, attr, getattr(settings, attr))
+        self.REQUEST_LOGGER_METHODS = getattr(settings, 'REQUEST_LOGGER_METHODS', ['*'])
+        self.REQUEST_LOGGER_STATUS = getattr(settings, 'REQUEST_LOGGER_STATUS', ['*'])
+        self.REQUEST_LOGGER_EXCLUDE_URL = getattr(settings, 'REQUEST_LOGGER_EXCLUDE_URL', ['admin'])
+        self.REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE = getattr(settings, 'REQUEST_LOGGER_EXCLUDE_CONTENT_TYPE', [])
+        self.REQUEST_LOGGER_SLOW_EXEC_TIME = getattr(settings, 'REQUEST_LOGGER_SLOW_EXEC_TIME', 500)
+        self.REQUEST_LOGGER_HIDE_SECRETS = getattr(settings, 'REQUEST_LOGGER_HIDE_SECRETS', ['password', 'token', 'access', 'refresh'])
+        self.REQUEST_LOGGER_CLEAR_LOGS_TIME = getattr(settings, 'REQUEST_LOGGER_CLEAR_LOGS_TIME', None)
+        self.REQUEST_LOGGER_LOG_FILES_PATH = getattr(settings, 'REQUEST_LOGGER_LOG_FILES_PATH', None)
+        self.REQUEST_LOGGER_LOG_FILES_FIELDS = getattr(settings, 'REQUEST_LOGGER_LOG_FILES_FIELDS', ['created_at', 'client_ip', 'method', 'url', 'status'])
 
     def _skip_save(self, request_log):
         if not '*' in self.REQUEST_LOGGER_METHODS and request_log.method not in self.REQUEST_LOGGER_METHODS:
