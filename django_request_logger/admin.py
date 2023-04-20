@@ -1,15 +1,16 @@
+from datetime import datetime
+
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import ModelAdmin
-from django.contrib.admin.actions import (
-    delete_selected as default_delete_selected,
-)
+from django.contrib.admin.actions import delete_selected as def_del_selected
+from django.utils.translation import gettext_lazy as _
+
 from .models import RequestLog
-from datetime import datetime
-from django.conf import settings
 
 
 def delete_selected(modeladmin, request, queryset):
-    response = default_delete_selected(modeladmin, request, queryset)
+    response = def_del_selected(modeladmin, request, queryset)
     storage = messages.get_messages(request)
     try:
         del storage._queued_messages[-1]
@@ -128,13 +129,13 @@ class RequestLogAdmin(ModelAdmin):
         pinned = queryset.filter(is_pinned=True)
         self.message_user(
             request,
-            f"Successfully deleted {logs_to_delete.count()} request log(s).",
+            _(f"Deleted {logs_to_delete.count()} request log(s)."),
             level=messages.SUCCESS,
         )
         if pinned:
             self.message_user(
                 request,
-                f"Couldn't delete {pinned.count()} pinned request log(s).",
+                _(f"Couldn't delete {pinned.count()} pinned request log(s)."),
                 level=messages.WARNING,
             )
 
@@ -144,13 +145,13 @@ class RequestLogAdmin(ModelAdmin):
         if obj.is_pinned:
             self.message_user(
                 request,
-                "You cannot delete a pinned request log.",
+                _("You cannot delete a pinned request log."),
                 level=messages.WARNING,
             )
             return None
         self.message_user(
             request,
-            "Request log successfully deleted.",
+            _("Request log successfully deleted."),
             level=messages.SUCCESS,
         )
         return super().delete_model(request, obj)
@@ -168,7 +169,9 @@ class RequestLogAdmin(ModelAdmin):
             log.save()
 
         self.message_user(
-            request, f"Altered {queryset.count()} log(s).", messages.SUCCESS
+            request,
+            _(f"Modified {queryset.count()} log(s)."),
+            messages.SUCCESS,
         )
 
     def get_actions(self, request):
